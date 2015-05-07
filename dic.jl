@@ -39,6 +39,9 @@ function compute_dictionary(fname)
                     end
                     dwords = 0
                     documents += 1
+                    if documents % 1000 == 0
+                      println(documents)
+                    end
                 end
                 prev_pos = i + 1
             end
@@ -63,12 +66,15 @@ end
 dic, lines = compute_dictionary(input_file)
 end
 
-println("file has $lines lines")
-println("Done:\t$(length(dic)) unique words ")
-#end
+println("Dile $input_file has $lines lines")
+println("Done:\t$(length(dic)) unique words collected.")
+
 @time begin
-    dic_file = open("out.dic","w")
-    serialize(dic_file,dic)
+    dic_file = open("dictionary.txt","w")
+    for (k, v) in dic
+      print(dic_file,"$k $v\n")
+    end
+    #serialize(dic_file,dic)
     flush(dic_file)
     close(dic_file)
 end

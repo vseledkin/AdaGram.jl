@@ -53,9 +53,9 @@ function inplace_train_vectors!(vm::VectorModel, doc::DenseArray{Tw},
 
 		if i % batch == 0
 			time_per_kword = batch / toq() / 1000
-			@printf("%.2f%% %.4f %.4f %.4f %.1f/%.1f %.2f kwords/sec\n", 
+			@printf("%.2f%% ppl: %.4f %.4f %.4f %.1f/%.1f %.2f kwords/sec\n",
 					words_read[1] / (total_words / 100),
-					total_ll[1] / total_ll[2], lr1, lr2, senses / i, max_senses, time_per_kword)
+					exp(-total_ll[1] / total_ll[2]), lr1, lr2, senses / i, max_senses, time_per_kword)
 			tic()
 		end
 
@@ -137,7 +137,7 @@ function inplace_train_vectors!(vm::VectorModel, dict::Dictionary, path::String,
 				vm.frequencies, threshold, words_read, train_words)
 
 			println("$(length(doc)) words read, $(position(file))/$end_pos")
-			if length(doc) == 0 
+			if length(doc) == 0
 				break
 			end
 
