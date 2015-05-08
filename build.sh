@@ -11,9 +11,9 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd $DIR
 mkdir -p ./lib
 
+echo "using $CC"
 if [[ `uname` == 'Darwin' ]]; then
-	$CC -std=c99 -march=native -dynamiclib ./csrc/learn.c -O3 -lm -o ./lib/superlib.dylib
+	$CC -std=c99 -march=native -dynamiclib ./csrc/learn1.c -O3 -lm -o ./lib/superlib.dylib
 elif [[ `uname` == 'Linux' ]]; then
 	$CC -std=c99 -march=native -shared ./csrc/learn.c -O3 -lm -fPIC -o ./lib/superlib.so
 fi
-

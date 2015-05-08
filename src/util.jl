@@ -1,23 +1,19 @@
 function read_from_file(vocab_path::String, min_freq::Int64=0, stopwords::Set{String}=Set{String}())
-	fin = open(vocab_path)
+	dic_file = open(vocab_path,"r")
+	dic = deserialize(dic_file)
+	close(dic_file)
 	freqs = Array(Int64, 0)
 	id2word = Array(String, 0)
-	while !eof(fin)
-		try
-			word, freq = split(readline(fin))
-			freq_num = int64(freq)
-			if freq_num < min_freq || word in stopwords continue end
-			push!(id2word, word)
-			push!(freqs, freq_num)
-		catch e
-		end
+	for (word, freq) in dic
+		freq_num = int64(freq)
+		if freq_num < min_freq || word in stopwords continue end
+		push!(id2word, word)
+		push!(freqs, freq_num)
 	end
-	close(fin)
-
 	return freqs, id2word
 end
 
-function read_from_file(vocab_path::String, M::Int, T::Int, min_freq::Int=5, 
+function read_from_file(vocab_path::String, M::Int, T::Int, min_freq::Int=5,
 	removeTopK::Int=70, stopwords::Set{String}=Set{String}())
 	freqs, id2word = read_from_file(vocab_path, min_freq, stopwords)
 
@@ -184,13 +180,13 @@ function vec(vm::VectorModel, dict::Dictionary, w::String, s::Integer)
 end
 
 function nearest_neighbors(vm::VectorModel, dict::Dictionary, word::DenseArray{Tsf},
-		K::Integer=10; exclude::Array{(Int32, Int64)}=Array((Int32, Int64), 0), 
+		K::Integer=10; exclude::Array{(Int32, Int64)}=Array((Int32, Int64), 0),
 		min_count::Float64=1.)
 	sim = zeros(Tsf, (T(vm), V(vm)))
 
 	for v in 1:V(vm)
 		for s in 1:T(vm)
-			if vm.counts[s, v] < min_count 
+			if vm.counts[s, v] < min_count
 				sim[s, v] = -Inf
 				continue
 			end
@@ -204,7 +200,7 @@ function nearest_neighbors(vm::VectorModel, dict::Dictionary, word::DenseArray{T
 	top = Array((Int, Int), K)
 	topSim = zeros(Tsf, K)
 
-	function split_index(sim, i) 
+	function split_index(sim, i)
 		i -= 1
 		v = i % size(sim, 1) + 1
 		s = int(floor(i / size(sim, 1))) + 1
@@ -214,7 +210,7 @@ function nearest_neighbors(vm::VectorModel, dict::Dictionary, word::DenseArray{T
 		curr_max = split_index(sim, indmax(sim))
 		topSim[k] = sim[curr_max[1], curr_max[2]]
 		sim[curr_max[1], curr_max[2]] = -Inf
-		
+
 		top[k] = curr_max
 	end
 	return [(dict.id2word[r[2]], r[1], simr) for (r, simr) in zip(top, topSim)]
@@ -228,13 +224,13 @@ end
 
 cos_dist(x, y) = 1. - dot(x, y) / vnorm(x, 2) / vnorm(y, 2)
 
-function disambiguate{Tw <: Integer}(vm::VectorModel, x::Tw, 
-		context::AbstractArray{Tw, 1}, use_prior::Bool=true, 
+function disambiguate{Tw <: Integer}(vm::VectorModel, x::Tw,
+		context::AbstractArray{Tw, 1}, use_prior::Bool=true,
 		min_prob::Float64=1e-3)
 	z = zeros(T(vm))
 
-	if use_prior 
-		expected_pi!(z, vm, x) 
+	if use_prior
+		expected_pi!(z, vm, x)
 		for k in 1:T(vm)
 			if z[k] < min_prob
 				z[k] = 0.

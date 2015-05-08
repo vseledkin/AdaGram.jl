@@ -20,7 +20,7 @@ s = ArgParseSettings()
   "--window"
     help = "(max) window size"
     arg_type = Int
-    default = 4
+    default = 5
   "--workers"
     help = "number of workers for parallel training"
     arg_type = Int
@@ -28,7 +28,7 @@ s = ArgParseSettings()
   "--min-freq"
     help = "min. frequency of the word"
     arg_type = Int
-    default = 20
+    default = 2
   "--remove-top-k"
     help = "remove top K most frequent words"
     arg_type = Int
@@ -36,7 +36,7 @@ s = ArgParseSettings()
   "--dim"
     help = "dimensionality of representations"
     arg_type = Int
-    default = 100
+    default = 128
   "--prototypes"
     help = "number of word prototypes"
     arg_type = Int
@@ -48,11 +48,11 @@ s = ArgParseSettings()
   "--d"
     help = "parameter of Pitman-Yor process"
     arg_type = Float64
-    default = 0.
+    default = 0.1
   "--subsample"
     help = "subsampling treshold. useful value is 1e-5"
     arg_type = Float64
-    default = Inf
+    default = 1e-3
   "--context-cut"
     help = "randomly reduce size of the context"
     action = :store_true
@@ -95,9 +95,10 @@ vm.alpha = args["alpha"]
 vm.d = args["d"]
 
 window = args["window"]
-
-inplace_train_vectors!(vm, dict, args["train"], window;
-  threshold=args["subsample"], context_cut=args["context-cut"],
-  epochs=args["epochs"], init_count=args["init-count"], sense_treshold=args["sense-treshold"])
-
+@time begin
+  println("Start")
+  inplace_train_vectors!(vm, dict, args["train"], window;
+    threshold=args["subsample"], context_cut=args["context-cut"],
+    epochs=args["epochs"], init_count=args["init-count"], sense_treshold=args["sense-treshold"])
+end
 save_model(args["output"], vm, dict, args["sense-treshold"])

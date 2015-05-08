@@ -8,17 +8,17 @@ println("Reading file $(ARGS[1])")
 input_file = ARGS[1]
 
 
-dictionary = Dict{String,Uint32}()
+dictionary = Dict{String,Int64}()
 lines = 0
 function compute_dictionary(fname)
-    dictionary = Dict{String,Uint32}()
+    dictionary = Dict{String,Int64}()
     fsize = filesize(fname)
 
     fid = open(fname,"r")
 
     documents = 0
     buf = zeros(Uint8, BUFFER_SIZE)
-    words = Array(UTF8String,MAX_DOC_SIZE)
+    words = Array(String,MAX_DOC_SIZE)
     dwords = 0
     at_tail = false
     while position(fid) < (fsize - BUFFER_SIZE) || at_tail
@@ -31,7 +31,7 @@ function compute_dictionary(fname)
                 if dwords > MAX_DOC_SIZE
                     println("Exceed MAX_DOC_SIZE ", MAX_DOC_SIZE)
                 else
-                    words[dwords] = UTF8String(buf[prev_pos:i-1])
+                    words[dwords] = utf8(buf[prev_pos:i-1])
                 end
                 if buf[i] == eol
                     for word in unique(words[1:dwords])
@@ -70,11 +70,11 @@ println("Dile $input_file has $lines lines")
 println("Done:\t$(length(dic)) unique words collected.")
 
 @time begin
-    dic_file = open("dictionary.txt","w")
-    for (k, v) in dic
-      print(dic_file,"$k $v\n")
-    end
-    #serialize(dic_file,dic)
+    dic_file = open("dictionary.dic","w")
+    #for (k, v) in dic
+    #  print(dic_file,"$k $v\n")
+  #  end
+    serialize(dic_file,dic)
     flush(dic_file)
     close(dic_file)
 end
